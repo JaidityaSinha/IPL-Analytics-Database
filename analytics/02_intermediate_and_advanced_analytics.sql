@@ -30,7 +30,7 @@ WITH batting_stats AS (SELECT players.player_name                               
 SELECT *
 FROM batting_stats
 WHERE balls_faced >= 30
-ORDER BY strike_rate DESC
+ORDER BY strike_rate DESC;
 
 
 -- =====================================================
@@ -57,7 +57,7 @@ WITH cte AS (SELECT players.player_name                                         
 
 SELECT *
 FROM cte
-ORDER BY batting_average DESC
+ORDER BY batting_average DESC;
 
 -- =====================================================
 -- Most Fifties
@@ -73,7 +73,7 @@ WITH cte AS (SELECT players.player_name,
 
 SELECT player_name, team_name, SUM(CASE WHEN runs BETWEEN 50 AND 99 THEN 1 ELSE 0 END) AS fifties
 FROM cte
-GROUP BY player_name, team_name
+GROUP BY player_name, team_name;
 
 -- =====================================================
 -- Most Centuries
@@ -90,7 +90,7 @@ WITH cte AS (SELECT players.player_name,
 SELECT player_name, team_name, SUM(CASE WHEN runs >= 100 THEN 1 ELSE 0 END) AS centuries
 FROM cte
 GROUP BY player_name, team_name
-ORDER BY centuries DESC
+ORDER BY centuries DESC;
 
 -- =====================================================
 -- Boundary Percentage
@@ -117,7 +117,7 @@ FROM players
 GROUP BY players.player_name, teams.team_name
 HAVING SUM(deliveries.batter_runs) IS NOT NULL
    AND SUM(batter_runs) > 0
-ORDER BY boundary_percentage DESC
+ORDER BY boundary_percentage DESC;
 
 -- =====================================================
 -- Best Economy Rate
@@ -137,7 +137,7 @@ WITH cte AS (SELECT players.player_name,
 SELECT *
 FROM cte
 WHERE overs >= 10
-ORDER BY economy
+ORDER BY economy;
 
 -- =====================================================
 -- Best Bowling Average
@@ -157,7 +157,7 @@ FROM players
          LEFT JOIN deliveries ON players.player_id = deliveries.bowler_id
 GROUP BY players.player_name, teams.team_name
 HAVING SUM(CASE WHEN deliveries.is_wicket AND deliveries.dismissal_type IN ('Caught', 'Bowled') THEN 1 ELSE 0 END) > 0
-ORDER BY bowling_average
+ORDER BY bowling_average;
 
 -- =====================================================
 -- Best Bowling Strike Rate
@@ -227,7 +227,7 @@ SELECT teams.team_name,
 FROM teams
          LEFT JOIN matches ON teams.team_id = matches.team1_id OR teams.team_id = matches.team2_id
 GROUP BY teams.team_name
-HAVING SUM(CASE WHEN matches.team1_id = teams.team_id OR matches.team2_id = teams.team_id THEN 1 ELSE 0 END) > 0
+HAVING SUM(CASE WHEN matches.team1_id = teams.team_id OR matches.team2_id = teams.team_id THEN 1 ELSE 0 END) > 0;
 
 -- =====================================================
 -- Head-to-Head Record
@@ -241,7 +241,7 @@ SELECT t1.team_name,
 FROM matches
          LEFT JOIN teams t1 ON matches.team1_id = t1.team_id
          LEFT JOIN teams t2 ON team2_id = t2.team_id
-GROUP BY t1.team_name, t2.team_name
+GROUP BY t1.team_name, t2.team_name;
 
 -- =====================================================
 -- Toss Impact Analysis
@@ -262,8 +262,7 @@ SELECT teams.team_name,
 FROM teams
          LEFT JOIN matches ON teams.team_id = matches.team1_id OR teams.team_id = matches.team2_id
 GROUP BY teams.team_name
-ORDER BY conversion_rate DESC
-
+ORDER BY conversion_rate DESC;
 
 -- =====================================================
 -- Batting First vs Chasing Success
@@ -294,7 +293,7 @@ SELECT teams.team_name,
 FROM matches
          JOIN innings ON matches.match_id = innings.match_id
          LEFT JOIN teams ON matches.team1_id = teams.team_id OR matches.team2_id = teams.team_id
-GROUP BY teams.team_name 
+GROUP BY teams.team_name; 
 
 -- =====================================================
 -- Highest Scoring Venue
@@ -311,7 +310,7 @@ FROM venues
          LEFT JOIN matches ON venues.venue_id = matches.venue_id
          LEFT JOIN deliveries ON matches.match_id = deliveries.match_id
 GROUP BY venues.venue_name
-ORDER BY avg_runs DESC
+ORDER BY avg_runs DESC;
 
 -- =====================================================
 -- Player Performance by Venue
@@ -333,7 +332,7 @@ FROM players
          LEFT JOIN venues ON matches.venue_id = venues.venue_id
          LEFT JOIN teams ON players.team_id = teams.team_id
 GROUP BY players.player_name, teams.team_name, venues.venue_name
-HAVING count(DISTINCT matches.match_id) > 0
+HAVING count(DISTINCT matches.match_id) > 0;
 
 -- =====================================================
 -- Orange Cap Progression
@@ -357,7 +356,7 @@ SELECT cte2.matches,
        cte2.cumulative_runs,
        cte2.runs,
        DENSE_RANK() over (PARTITION BY matches ORDER BY cumulative_runs DESC)
-FROM cte2
+FROM cte2;
 
 -- =====================================================
 -- Purple Cap Progression
@@ -385,7 +384,7 @@ SELECT cte2.matches,
        cte2.cumulative_wickets,
        cte2.wickets,
        DENSE_RANK() over (PARTITION BY matches ORDER BY cumulative_wickets DESC)
-FROM cte2
+FROM cte2;
 
 -- =====================================================
 -- End of Intermediate Analytics Queries

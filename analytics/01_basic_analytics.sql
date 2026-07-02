@@ -274,9 +274,7 @@ WITH cte AS (SELECT matches.match_id,
 
 SELECT *
 FROM cte
-WHERE rank = 1
-
-
+WHERE rank = 1;
 
 -- =====================================================
 -- Orange Cap Leaderboard
@@ -292,7 +290,7 @@ FROM players
          LEFT JOIN deliveries ON players.player_id = deliveries.batter_id
 GROUP BY players.player_name, teams.team_name
 HAVING COUNT(DISTINCT deliveries.match_id) != 0
-ORDER BY total_runs DESC
+ORDER BY total_runs DESC;
 
 -- =====================================================
 -- Purple Cap Leaderboard
@@ -313,7 +311,7 @@ FROM players
          LEFT JOIN deliveries ON players.player_id = deliveries.bowler_id
 GROUP BY players.player_name, teams.team_name
 HAVING COUNT(DISTINCT deliveries.match_id) > 0
-ORDER BY total_wickets DESC
+ORDER BY total_wickets DESC;
 
 
 
