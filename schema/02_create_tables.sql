@@ -17,20 +17,26 @@ CREATE TABLE ipl.venues (
 	city        VARCHAR NOT NULL
 );
 
-CREATE TABLE ipl.matches (
-	match_id        SERIAL PRIMARY KEY,
-	match_date      DATE NOT NULL,
-	venue_id        INT NOT NULL REFERENCES ipl.venues(venue_id),
-	team1_id        INT NOT NULL REFERENCES ipl.teams(team_id),
-	team2_id        INT NOT NULL REFERENCES ipl.teams(team_id),
-	winner_team_id  INT REFERENCES          ipl.teams(team_id),
-
-	CHECK (team1_id != team2_id),
-	CHECK(
-		winner_team_id IS NULL
-		OR winner_team_id = team1_id
-		OR winner_team_id = team2_id
-	)
+create table matches
+(
+    match_id       serial
+        primary key,
+    match_date     date    not null,
+    venue_id       integer not null
+        references venues,
+    team1_id       integer not null
+        references teams,
+    team2_id       integer not null
+        references teams,
+    winner_team_id integer
+        references teams,
+    toss_winner_id integer
+        references teams,
+    toss_decision  varchar(10),
+    constraint different_teams
+        check (team1_id <> team2_id),
+    constraint valid_winner
+        check ((winner_team_id IS NULL) OR (winner_team_id = team1_id) OR (winner_team_id = team2_id))
 );
 
 CREATE TABLE ipl.innings (

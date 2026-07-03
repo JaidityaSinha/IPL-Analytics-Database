@@ -155,13 +155,21 @@ def load_matches(connection, team_ids, venue_ids):
             row["team2"]
         )
 
+        toss_winner = team_name_map.get(
+            row["toss_winner"],
+            row["toss_winner"]
+        )
+
         winner_team_id = None
 
         if pd.notna(row["match_winner"]):
             winner = str(row["match_winner"]).strip()
 
             if winner not in ("", "No Result", "Tie", "Abandoned"):
-                winner = team_name_map.get(winner, winner)
+                winner = team_name_map.get(
+                    winner,
+                    winner
+                )
 
                 if winner in team_ids:
                     winner_team_id = team_ids[winner]
@@ -173,9 +181,11 @@ def load_matches(connection, team_ids, venue_ids):
                 venue_id,
                 team1_id,
                 team2_id,
-                winner_team_id
+                winner_team_id,
+                toss_winner_id,
+                toss_decision
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING match_id;
             """,
             (
@@ -183,7 +193,9 @@ def load_matches(connection, team_ids, venue_ids):
                 venue_ids[venue_name],
                 team_ids[team1],
                 team_ids[team2],
-                winner_team_id
+                winner_team_id,
+                team_ids[toss_winner],
+                row["toss_decision"].strip().lower()
             )
         )
 
