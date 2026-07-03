@@ -6,10 +6,8 @@ CREATE TABLE ipl.teams (
 CREATE TABLE ipl.players (
 	player_id       SERIAL PRIMARY KEY,
 	player_name     VARCHAR NOT NULL,
-	dob             DATE,
 	nationality     VARCHAR NOT NULL,
-	batting_style   VARCHAR NOT NULL,
-	bowling_style   VARCHAR,
+	role            VARCHAR,
 	team_id         INT NOT NULL REFERENCES ipl.teams(team_id)
 );
 
