@@ -3,14 +3,15 @@ from database import get_connection
 
 def main():
     try:
-        conn = get_connection()
+        connection = get_connection()
+
         print("Connected to PostgreSQL successfully!")
 
-        conn.close()
-        print("Connection closed.")
+        connection.close()
+
+        print("Connection closed successfully!")
 
     except Exception as e:
-        print("Connection failed!")
         print(e)
 
 
