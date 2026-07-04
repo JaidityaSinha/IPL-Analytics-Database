@@ -66,8 +66,6 @@ PLAYER_NAME_MAP = {
     "Bhuvneshwar": "Bhuvneshwar Kumar",
     "Shahrukh Khan": "M Shahrukh Khan",
     "Raj Bawa": "hello",
-    "Mitchell Owen": "Mitchell Santner"
-
 }
 
 def load_teams(connection):
