@@ -17,7 +17,7 @@ CREATE TABLE ipl.venues (
 	city        VARCHAR NOT NULL
 );
 
-create table matches
+create table ipl.matches
 (
     match_id       serial
         primary key,
