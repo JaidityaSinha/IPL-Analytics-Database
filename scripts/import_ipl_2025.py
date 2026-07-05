@@ -1,6 +1,12 @@
 import pandas as pd
-
 from database import get_connection
+
+DATA_DIR = "../data"
+
+AUCTION_CSV = f"{DATA_DIR}/auction.csv"
+MATCHES_CSV = f"{DATA_DIR}/matches.csv"
+DELIVERIES_CSV = f"{DATA_DIR}/deliveries.csv"
+VENUES_CSV = f"{DATA_DIR}/venues.csv"
 
 TEAM_NAME_MAP = {
     "CSK": "Chennai Super Kings",
@@ -65,13 +71,19 @@ PLAYER_NAME_MAP = {
     "Azmatullah": "Azmatullah Omarzai",
     "Bhuvneshwar": "Bhuvneshwar Kumar",
     "Shahrukh Khan": "M Shahrukh Khan",
-    "Raj Bawa": "hello",
 }
 
 def load_teams(connection):
-    dataframe = pd.read_csv("../data/auction.csv")
+    """
+        Loads all IPL teams from the auction dataset.
 
-    dataframe = dataframe[dataframe["Team"] != "-"]
+        Returns:
+            dict: Mapping of team names to database team IDs.
+        """
+
+    df = pd.read_csv(AUCTION_CSV)
+
+    df = df[df["Team"] != "-"]
 
     cursor = connection.cursor()
 
@@ -79,7 +91,7 @@ def load_teams(connection):
 
     teams = sorted(
         TEAM_NAME_MAP[team]
-        for team in dataframe["Team"].unique()
+        for team in df["Team"].unique()
     )
 
     for team in teams:
@@ -101,16 +113,23 @@ def load_teams(connection):
     return team_ids
 
 def load_players(connection, team_ids):
-    dataframe = pd.read_csv("../data/auction.csv")
+    """
+    Loads all sold players from the auction dataset.
+
+    Returns:
+        dict: Mapping of player names to database player IDs.
+    """
+
+    df = pd.read_csv(AUCTION_CSV)
 
     # Ignore unsold players
-    dataframe = dataframe[dataframe["Team"] != "-"]
+    df = df[df["Team"] != "-"]
 
     cursor = connection.cursor()
 
     player_ids = {}
 
-    for _, row in dataframe.iterrows():
+    for _, row in df.iterrows():
 
         team_name = TEAM_NAME_MAP.get(row["Team"], row["Team"])
         role = ROLE_MAP.get(row["Type"], row["Type"])
@@ -142,16 +161,21 @@ def load_players(connection, team_ids):
 
     return player_ids
 
-
-
 def load_venues(connection):
-    dataframe = pd.read_csv("../data/venues.csv")
+    """
+    Loads all IPL venues into the database.
+
+    Returns:
+        dict: Mapping of venue names to database venue IDs.
+    """
+
+    df = pd.read_csv(VENUES_CSV)
 
     cursor = connection.cursor()
 
     venue_ids = {}
 
-    for _, row in dataframe.iterrows():
+    for _, row in df.iterrows():
 
         cursor.execute(
             """
@@ -177,13 +201,20 @@ def load_venues(connection):
     return venue_ids
 
 def load_matches(connection, team_ids, venue_ids):
-    dataframe = pd.read_csv("../data/matches.csv")
+    """
+    Loads all IPL matches into the database.
+
+    Returns:
+        dict: Mapping of CSV match IDs to database match IDs.
+    """
+
+    df = pd.read_csv(MATCHES_CSV)
 
     cursor = connection.cursor()
 
     match_ids = {}
 
-    for _, row in dataframe.iterrows():
+    for _, row in df.iterrows():
 
         match_date = pd.to_datetime(
             row["date"],
@@ -205,7 +236,7 @@ def load_matches(connection, team_ids, venue_ids):
             row["team2"]
         )
 
-        # Handle toss winner (may be NULL for abandoned matches)
+        # Handle toss winner (maybe NULL for abandoned matches)
         toss_winner_id = None
 
         if pd.notna(row["toss_winner"]):
@@ -215,13 +246,13 @@ def load_matches(connection, team_ids, venue_ids):
             )
             toss_winner_id = team_ids[toss_winner]
 
-        # Handle toss decision (may be NULL)
+        # Handle toss decision (maybe NULL)
         toss_decision = None
 
         if pd.notna(row["toss_decision"]):
             toss_decision = row["toss_decision"].strip().lower()
 
-        # Handle winner (may be NULL)
+        # Handle winner (maybe NULL)
         winner_team_id = None
 
         if pd.notna(row["match_winner"]):
@@ -268,13 +299,21 @@ def load_matches(connection, team_ids, venue_ids):
     return match_ids
 
 def load_innings(connection, match_ids, team_ids):
-    dataframe = pd.read_csv("../data/matches.csv")
+    """
+    Generates innings records for every completed match
+    using toss winner and toss decision.
+
+    Returns:
+        int: Number of innings inserted.
+    """
+
+    df = pd.read_csv(MATCHES_CSV)
 
     cursor = connection.cursor()
 
     innings_count = 0
 
-    for _, row in dataframe.iterrows():
+    for _, row in df.iterrows():
 
         # Skip matches where the toss never happened
         if pd.isna(row["toss_winner"]) or pd.isna(row["toss_decision"]):
@@ -355,6 +394,12 @@ def load_innings(connection, match_ids, team_ids):
     return innings_count
 
 def clean_player_name(name):
+    """
+    Normalizes player names from the deliveries dataset.
+
+    Removes substitute tags and multiple-player entries.
+    """
+
     if pd.isna(name):
         return None
 
@@ -370,6 +415,11 @@ def clean_player_name(name):
     return name
 
 def resolve_player_name(name, player_ids):
+    """
+    Resolves abbreviated player names to the full names
+    stored in the database.
+    """
+
     if name is None:
         return None
 
@@ -414,19 +464,25 @@ def resolve_player_name(name, player_ids):
     # ----------------------------
     # 5. Could not resolve
     # ----------------------------
-    print(f"Could not resolve player: {name}")
-    return None
+    raise KeyError(f"Could not resolve player: {name}")
 
 def load_deliveries(connection, match_ids, player_ids):
-    dataframe = pd.read_csv("../data/deliveries.csv")
+    """
+    Loads every delivery of every IPL match.
 
-    dataframe = dataframe[dataframe["innings"].isin([1, 2])]
+    Returns:
+        int: Number of deliveries inserted.
+    """
+
+    df = pd.read_csv(DELIVERIES_CSV)
+
+    df = df[df["innings"].isin([1, 2])]
 
     cursor = connection.cursor()
 
     delivery_count = 0
 
-    for _, row in dataframe.iterrows():
+    for _, row in df.iterrows():
 
         # Skip deliveries from matches that were never imported
         if row["match_no"] not in match_ids:
@@ -449,9 +505,6 @@ def load_deliveries(connection, match_ids, player_ids):
             player_ids
         )
 
-        if batter is None or bowler is None:
-            continue
-
         is_wicket = pd.notna(row["wicket_type"])
 
         dismissal_type = None
@@ -472,16 +525,17 @@ def load_deliveries(connection, match_ids, player_ids):
                     player_ids
                 )
 
-                if dismissed_player is not None:
-                    dismissed_batter_id = player_ids[dismissed_player]
+                dismissed_batter_id = player_ids[dismissed_player]
 
             fielder = clean_player_name(row["fielder"])
 
             if fielder is not None:
-                fielder = resolve_player_name(fielder, player_ids)
+                fielder = resolve_player_name(
+                    fielder,
+                    player_ids
+                )
 
-                if fielder is not None:
-                    fielder_id = player_ids[fielder]
+                fielder_id = player_ids[fielder]
 
         cursor.execute(
             """
@@ -536,6 +590,10 @@ def load_deliveries(connection, match_ids, player_ids):
     return delivery_count
 
 def main():
+    """
+    Runs the complete IPL 2025 ETL pipeline.
+    """
+
     connection = get_connection()
 
     team_ids = load_teams(connection)
@@ -549,8 +607,15 @@ def main():
         player_ids
     )
 
-
-    print(delivery_count)
+    print("\n========== Import Summary ==========")
+    print(f"Teams       : {len(team_ids)}")
+    print(f"Players     : {len(player_ids)}")
+    print(f"Venues      : {len(venue_ids)}")
+    print(f"Matches     : {len(match_ids)}")
+    print(f"Innings     : {innings_count}")
+    print(f"Deliveries  : {delivery_count}")
+    print("====================================")
+    print("Import completed successfully!")
 
     connection.close()
 

@@ -39,46 +39,62 @@ create table ipl.matches
         check ((winner_team_id IS NULL) OR (winner_team_id = team1_id) OR (winner_team_id = team2_id))
 );
 
-CREATE TABLE ipl.innings (
-	innings_number  INT NOT NULL,
-	match_id        INT NOT NULL REFERENCES ipl.matches(match_id),
-	batting_team_id INT NOT NULL REFERENCES ipl.teams(team_id),
-	bowling_team_id INT NOT NULL REFERENCES ipl.teams(team_id),
-
-	PRIMARY KEY(match_id, innings_number),
-
-	CONSTRAINT different_teams 
-	CHECK(batting_team_id != bowling_team_id)
+create table innings
+(
+    innings_number  integer not null
+        constraint valid_innings_number
+            check (innings_number = ANY (ARRAY [1, 2])),
+    match_id        integer not null
+        references matches,
+    batting_team_id integer not null
+        references teams,
+    bowling_team_id integer not null
+        references teams,
+    primary key (match_id, innings_number),
+    constraint different_teams
+        check (batting_team_id <> bowling_team_id)
 );
 
-CREATE TABLE ipl.deliveries (
-	delivery_id SERIAL PRIMARY KEY,
-
-	match_id        INT NOT NULL REFERENCES ipl.matches(match_id),
-	innings_number  INT NOT NULL,
-
-	over_number INT NOT NULL,
-	ball_number INT NOT NULL,
-
-	batter_id INT NOT NULL REFERENCES ipl.players(player_id),
-	bowler_id INT NOT NULL REFERENCES ipl.players(player_id),
-
-	batter_runs INT NOT NULL CHECK(batter_runs >= 0),
-	wide_runs   INT NOT NULL CHECK(wide_runs >= 0),
-	noball_runs INT NOT NULL CHECK(noball_runs >= 0),
-	bye_runs    INT NOT NULL CHECK(bye_runs >= 0),
-	legbye_runs INT NOT NULL CHECK(legbye_runs >= 0),
-
-	is_wicket BOOL      NOT NULL,
-	dismissal_type      VARCHAR,
-	dismissed_batter_id INT REFERENCES ipl.players(player_id),
-	fielder_id          INT REFERENCES ipl.players(player_id),
-
-    CHECK (
-        (is_wicket = TRUE  AND dismissal_type IS NOT NULL)
-        OR
-        (is_wicket = FALSE AND dismissal_type IS NULL)
-    ),
-
-	FOREIGN KEY(match_id, innings_number) REFERENCES ipl.innings(match_id, innings_number)
+create table deliveries
+(
+    delivery_id         serial
+        primary key,
+    match_id            integer not null
+        references matches,
+    innings_number      integer not null,
+    over_number         integer not null
+        constraint valid_over_number
+            check ((over_number >= 1) AND (over_number <= 20)),
+    ball_number         integer not null
+        constraint valid_ball_number
+            check ((ball_number >= 1) AND (ball_number <= 10)),
+    batter_id           integer not null
+        references players,
+    bowler_id           integer not null
+        references players,
+    batter_runs         integer not null
+        constraint deliveries_batter_runs_check
+            check (batter_runs >= 0),
+    wide_runs           integer not null
+        constraint deliveries_wide_runs_check
+            check (wide_runs >= 0),
+    noball_runs         integer not null
+        constraint deliveries_noball_runs_check
+            check (noball_runs >= 0),
+    bye_runs            integer not null
+        constraint deliveries_bye_runs_check
+            check (bye_runs >= 0),
+    legbye_runs         integer not null
+        constraint deliveries_legbye_runs_check
+            check (legbye_runs >= 0),
+    is_wicket           boolean not null,
+    dismissal_type      varchar,
+    dismissed_batter_id integer
+        references players,
+    fielder_id          integer
+        references players,
+    foreign key (match_id, innings_number) references innings,
+    constraint valid_wicket_info
+        check (((is_wicket = false) AND (dismissal_type IS NULL) AND (dismissed_batter_id IS NULL)) OR
+               ((is_wicket = true) AND (dismissal_type IS NOT NULL) AND (dismissed_batter_id IS NOT NULL)))
 );
