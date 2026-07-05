@@ -182,6 +182,8 @@ The ETL pipeline extracts IPL 2025 datasets from CSV files, performs data cleani
 
 - Highest Scoring Venues
 
+---
+
 ## SQL Concepts Demonstrated
 
 - Joins
