@@ -131,7 +131,7 @@ The database consists of six normalized tables connected through primary and for
 ## Entity Relationship Diagram
 
 <p align="center">
-    <img src="docs/er_diagram.svg" alt="IPL Analytics Database ER Diagram" width="900">
+    <img src="docs/ER_Diagram.svg" alt="IPL Analytics Database ER Diagram" width="900">
 </p>
 
 The schema is designed to maintain referential integrity while supporting efficient analytical queries across teams, players, matches, innings, and deliveries.
