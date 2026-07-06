@@ -131,7 +131,7 @@ The database consists of six normalized tables connected through primary and for
 ## Entity Relationship Diagram
 
 <p align="center">
-    <img src="docs/er_diagram.svg" alt="IPL Analytics Database ER Diagram" width="900">
+    <img src="docs/ER_Diagram.svg" alt="IPL Analytics Database ER Diagram" width="900">
 </p>
 
 The schema is designed to maintain referential integrity while supporting efficient analytical queries across teams, players, matches, innings, and deliveries.
@@ -181,6 +181,8 @@ The ETL pipeline extracts IPL 2025 datasets from CSV files, performs data cleani
 ### Venue Analytics
 
 - Highest Scoring Venues
+
+---
 
 ## SQL Concepts Demonstrated
 
